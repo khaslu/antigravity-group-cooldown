@@ -29,14 +29,6 @@ jobs:
             goos: linux
             goarch: arm64
             artifact_name: antigravity-group-cooldown.so
-          - os: macos-13 # Intel
-            goos: darwin
-            goarch: amd64
-            artifact_name: antigravity-group-cooldown.dylib
-          - os: macos-latest # Apple Silicon
-            goos: darwin
-            goarch: arm64
-            artifact_name: antigravity-group-cooldown.dylib
 
     steps:
       - name: Checkout code

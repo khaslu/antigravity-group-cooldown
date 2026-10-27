@@ -58,8 +58,11 @@ func TestRegistration(t *testing.T) {
 	if !reg.Capabilities.UsagePlugin {
 		t.Errorf("expected UsagePlugin capability to be true")
 	}
-	if reg.Metadata.Name != "antigravity-group-cooldown" {
+	if reg.Metadata.Name != "Antigravity Group Cooldown" {
 		t.Errorf("unexpected plugin name: %s", reg.Metadata.Name)
+	}
+	if len(reg.Metadata.ConfigFields) != 3 {
+		t.Errorf("expected 3 ConfigFields, got %d", len(reg.Metadata.ConfigFields))
 	}
 }
 

@@ -213,10 +213,30 @@ func pluginRegistration() registration {
 	return registration{
 		SchemaVersion: pluginabi.SchemaVersion,
 		Metadata: pluginapi.Metadata{
-			Name:             "antigravity-group-cooldown",
+			Name:             "Antigravity Group Cooldown",
 			Version:          "0.1.0",
 			Author:           "khaslu",
 			GitHubRepository: "https://github.com/khaslu/antigravity-group-cooldown",
+			ConfigFields: []pluginapi.ConfigField{
+				{
+					Name:        "log_decisions",
+					Type:        pluginapi.ConfigFieldTypeBoolean,
+					Default:     true,
+					Description: "Log cooldown detections and routing failover decisions to the proxy output.",
+				},
+				{
+					Name:        "state_file",
+					Type:        pluginapi.ConfigFieldTypeString,
+					Default:     "",
+					Description: "Path to JSON file where active group cooldowns are persisted (leave empty for default).",
+				},
+				{
+					Name:        "proxy_config_file",
+					Type:        pluginapi.ConfigFieldTypeString,
+					Default:     "",
+					Description: "Custom path to proxy config.yaml for automatic alias discovery (auto-detected if empty).",
+				},
+			},
 		},
 		Capabilities: registrationCapability{
 			Scheduler:   true,

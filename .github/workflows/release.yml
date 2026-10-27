@@ -4,6 +4,12 @@ on:
   push:
     tags:
       - 'v*'
+  workflow_dispatch:
+    inputs:
+      tag_name:
+        description: 'Tag version for release (e.g. v0.1.0)'
+        required: false
+        default: 'v0.1.0'
 
 permissions:
   contents: write
@@ -60,7 +66,7 @@ jobs:
 
       - name: Package Zip
         run: |
-          TAG_NAME=${GITHUB_REF#refs/tags/}
+          TAG_NAME="${{ github.event.inputs.tag_name || github.ref_name }}"
           ZIP_NAME="antigravity-group-cooldown_${TAG_NAME}_${{ matrix.goos }}_${{ matrix.goarch }}.zip"
           cd dist
           zip -9 "$ZIP_NAME" ${{ matrix.artifact_name }}
@@ -93,6 +99,7 @@ jobs:
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
+          tag_name: ${{ github.event.inputs.tag_name || github.ref_name }}
           files: |
             release-artifacts/*.zip
             release-artifacts/checksums.txt

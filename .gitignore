@@ -1,0 +1,24 @@
+# Binários e bibliotecas compiladas
+bin/
+*.so
+*.dylib
+*.dll
+*.h
+*.exe
+
+# Arquivos de estado e logs locais
+*.json.tmp
+state.json
+antigravity-group-cooldown.json
+
+# Go
+vendor/
+*.out
+*.test
+
+# IDEs e editores
+.idea/
+.vscode/
+*.swp
+*~
+.DS_Store

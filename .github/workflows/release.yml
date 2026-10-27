@@ -1,0 +1,99 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  build-release:
+    name: Build Release Artifacts
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            goos: linux
+            goarch: amd64
+            artifact_name: antigravity-group-cooldown.so
+          - os: ubuntu-latest
+            goos: linux
+            goarch: arm64
+            artifact_name: antigravity-group-cooldown.so
+          - os: macos-13 # Intel
+            goos: darwin
+            goarch: amd64
+            artifact_name: antigravity-group-cooldown.dylib
+          - os: macos-latest # Apple Silicon
+            goos: darwin
+            goarch: arm64
+            artifact_name: antigravity-group-cooldown.dylib
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.26.x'
+          check-latest: true
+
+      - name: Install ARM64 Cross-Compiler (Linux only)
+        if: matrix.goos == 'linux' && matrix.goarch == 'arm64'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gcc-aarch64-linux-gnu
+
+      - name: Build C-Shared Library
+        env:
+          GOOS: ${{ matrix.goos }}
+          GOARCH: ${{ matrix.goarch }}
+          CGO_ENABLED: 1
+          CC: ${{ matrix.goos == 'linux' && matrix.goarch == 'arm64' && 'aarch64-linux-gnu-gcc' || 'gcc' }}
+        run: |
+          mkdir -p dist
+          go build -buildmode=c-shared -o dist/${{ matrix.artifact_name }} .
+
+      - name: Package Zip
+        run: |
+          TAG_NAME=${GITHUB_REF#refs/tags/}
+          ZIP_NAME="antigravity-group-cooldown_${TAG_NAME}_${{ matrix.goos }}_${{ matrix.goarch }}.zip"
+          cd dist
+          zip -9 "$ZIP_NAME" ${{ matrix.artifact_name }}
+          mv "$ZIP_NAME" ../
+          cd ..
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.goos }}-${{ matrix.goarch }}
+          path: "*.zip"
+
+  publish:
+    name: Publish GitHub Release
+    needs: build-release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: release-artifacts
+          merge-multiple: true
+
+      - name: Generate Checksums
+        run: |
+          cd release-artifacts
+          sha256sum *.zip > checksums.txt
+          cat checksums.txt
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            release-artifacts/*.zip
+            release-artifacts/checksums.txt
+          generate_release_notes: true
